@@ -19,4 +19,20 @@ object ConfigException {
       this(origin,path,expected,actual,null)
     def this(origin: ConfigOrigin, message: String) = this(origin,message,null)
   }
+
+  class Missing(path: String, cause: Throwable)
+    extends ConfigException(s"No configuration setting found for key '$path'",cause) {
+    def this(path: String) = this(path,null)
+  }
+
+  class BadPath(origin: ConfigOrigin, path: String, message: String, cause: Throwable)
+    extends ConfigException(origin, if(path!=null) s"Invalid path '$path': $message" else message, cause) {
+    def this(path: String, message: String) = this(null,path,message,null)
+  }
+
+  class Parse(origin: ConfigOrigin, message: String, cause: Throwable)
+    extends ConfigException(origin,message,cause) {
+    def this(message: String) = this(null,message,null)
+    def this(origin: ConfigOrigin, message: String) = this(origin,message,null)
+  }
 }

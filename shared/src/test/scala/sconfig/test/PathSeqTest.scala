@@ -15,5 +15,8 @@ object PathSeqTest extends TestSuite {
     'toPath-{
       assert( complexPathSeq.toPath == complexPath )
     }
+    'fromString-{
+      assert( PathSeq.fromString(complexPath) == complexPathSeq )
+    }
   }
 }

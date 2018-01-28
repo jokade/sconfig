@@ -3,6 +3,7 @@
 // Description: sconfig implementation of ConfigValue
 package sconfig
 
+import com.typesafe.config
 import com.typesafe.config.ConfigException.WrongType
 import com.typesafe.config._
 import sconfig.SConfigValue.TypeException
@@ -25,6 +26,7 @@ trait SConfigValue extends ConfigValue {
 }
 
 object SConfigValue {
+
   case class TypeException(expected: String, actual: String) extends RuntimeException()
 
   def apply(value: Any): SConfigValue = value match {

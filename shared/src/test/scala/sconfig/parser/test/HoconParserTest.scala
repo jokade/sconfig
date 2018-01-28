@@ -176,6 +176,7 @@ object HoconParserTest extends TestSuite {
           |  string:"string with spaces"
           |  bool   =true
           |
+          |  sub.y = 1
           |  sub {
           |    x.y = z
           |
@@ -205,6 +206,7 @@ object HoconParserTest extends TestSuite {
       res.string("string") ==> "string with spaces"
       res.boolean("bool")  ==> true
       val sub = res.obj("sub")
+      sub.int("y") ==> 1
 //      sub.int("\"a key\"")     ==> 42
       val x = sub.obj("x")
       x.string("y") ==> "z"

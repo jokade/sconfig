@@ -4,6 +4,7 @@
 package com.typesafe.config
 
 trait Config extends ConfigMergeable {
+  def root(): ConfigObject
   def atKey(key: Key): Config
   def atPath(path: Path): Config
   def chckValid(reference: Config, restrictToPaths: Path*): Unit
@@ -12,16 +13,31 @@ trait Config extends ConfigMergeable {
   def getAnyRefList[T<:Object](path: Path): java.util.List[T]
   def getBoolean(path: Path): Boolean
   def getBooleanList(path: Path): java.util.List[java.lang.Boolean]
+  def getInt(path: Path): Int
+  def getLong(path: Path): Long
   def getBytes(path: String): java.lang.Long
   def getBytesList(path: String): java.util.List[java.lang.Long]
   def getConfig(path: Path): Config
   def getConfigList(path: Path): java.util.List[Config]
   def getDouble(path: Path): java.lang.Double
   def getDoubleList(path: Path): java.util.List[java.lang.Double]
+  def getString(path: Path): String
 //  def getDuration(path: )
 }
 
-trait ConfigOrigin
+trait ConfigOrigin {
+  def description(): String
+  def filename(): String
+  def resource(): String
+  def lineNumber(): Int
+}
+
+object ConfigOrigin {
+  case class StringOrigin(description: String, lineNumber: Int = -1) extends ConfigOrigin {
+    override def filename(): String = null
+    override def resource(): String = null
+  }
+}
 
 
 trait ConfigMergeable {
