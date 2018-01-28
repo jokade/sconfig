@@ -1,2 +1,2 @@
 # sconfig
-A Typesafe Config compatible configuration library for Scala JVM, JS and Native.
+A partial implementation of the [HOCON config API](https://github.com/lightbend/config) with extended features, written in pure Scala.
