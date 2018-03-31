@@ -17,12 +17,16 @@ object HoconParserTest extends TestSuite {
 
   def qw(s: String): SConfigValue = StringValue(s)
   implicit def pair(p: (PathSeq,String)): (PathSeq,SConfigValue) = (p._1,StringValue(p._2,false))
-  implicit def stringValue(s: String): SConfigValue = StringValue(s,false)
-  implicit def boolValue(b: Boolean): SConfigValue = if(b) TrueValue else FalseValue
-  implicit def longValue(l: Long): SConfigValue = LongValue(l)
-  implicit def doubleValue(d: Double): SConfigValue = DoubleValue(d)
+  implicit def stringValue(s: String): AtomicValue = StringValue(s,false)
+  implicit def boolValue(b: Boolean): AtomicValue = if(b) TrueValue else FalseValue
+  implicit def longValue(l: Long): AtomicValue = LongValue(l)
+  implicit def intValue(i: Int): AtomicValue = LongValue(i)
+  implicit def doubleValue(d: Double): AtomicValue = DoubleValue(d)
+  implicit def intListValue(seq: Seq[Int]): ListValue = ListValue(seq.map(LongValue(_)))
+  implicit def stringListValue(seq: Seq[String]): ListValue = ListValue(seq.map(StringValue(_)))
+  implicit def doubleListValue(seq: Seq[Double]): ListValue = ListValue(seq.map(DoubleValue(_)))
 
-  val tests = TestSuite {
+  val tests = Tests {
 
     'space-{
       import HoconParser.space.parse
@@ -110,6 +114,19 @@ object HoconParserTest extends TestSuite {
       fails("FALSE")
     }
 
+    'list-{
+      implicit val eut = HoconParser.list
+
+      test("[]",Seq[Int]())
+      test("[1,2,3]",Seq(1,2,3))
+      test("[  1 ,2, 3  ]",Seq(1,2,3))
+      test("[1]",Seq(1))
+      test("[1.0, 2.0, 3.0, 4.0]",Seq(1.0,2.0,3.0,4.0))
+      test("[true, false]",ListValue(Seq(TrueValue,FalseValue)))
+      test("[ hello , world ]",ListValue(Seq(StringValue("hello",false),StringValue("world",false))))
+      test("[\" hello \" , \" world \"]",Seq(" hello "," world "))
+    }
+
     'pair-{
       implicit val eut = HoconParser.pair
 
@@ -194,6 +211,10 @@ object HoconParserTest extends TestSuite {
           |    }
           |    x.a.c = "another string"
           |  }
+          |
+          |  stringList = ["hello ", world  ]
+          |  emptyList = [ ]
+          |  intList = [ 1,2,  3  ]
           |}
         """.stripMargin
 
@@ -212,6 +233,9 @@ object HoconParserTest extends TestSuite {
       x.string("y") ==> "z"
       x.obj("a").boolean("b") ==> false
       x.obj("a").string("c")  ==> "another string"
+      res.strings("stringList") ==> Seq("hello ","world")
+      res.strings("emptyList").size ==> 0
+      res.ints("intList") ==> Seq(1,2,3)
     }
   }
 

@@ -3,6 +3,7 @@
 // Description: Exceptions specific to Config
 package com.typesafe.config
 
+
 class ConfigException(val origin: ConfigOrigin, message: String, cause: Throwable)
   extends RuntimeException(if(origin==null) message else s"$origin: $message",cause) {
   def this(origin: ConfigOrigin, message: String) = this(origin,message,null)
@@ -35,4 +36,7 @@ object ConfigException {
     def this(message: String) = this(null,message,null)
     def this(origin: ConfigOrigin, message: String) = this(origin,message,null)
   }
+
+  class IO(origin: ConfigOrigin, message: String, cause: Throwable)
+    extends ConfigException(origin,message,cause)
 }

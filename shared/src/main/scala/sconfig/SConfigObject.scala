@@ -22,11 +22,17 @@ trait SConfigObject extends SConfigValue with ConfigObject {
   def apply(key: String): SConfigValue
   def opt(key: String): Option[SConfigValue]
   def int(key: String): Int = apply(key).asInt
+  def ints(key: String): Seq[java.lang.Integer] = apply(key).asIntSeq
   def long(key: String): Long = apply(key).asLong
+  def longs(key: String): Seq[java.lang.Long] = apply(key).asLongSeq
   def float(key: String): Float = apply(key).asFloat
+  def floats(key: String): Seq[java.lang.Float] = apply(key).asFloatSeq
   def double(key: String): Double = apply(key).asDouble
+  def doubles(key: String): Seq[java.lang.Double] = apply(key).asDoubleSeq
   def boolean(key: String): Boolean = apply(key).asBoolean
+  def booleans(key: String): Seq[java.lang.Boolean] = apply(key).asBooleanSeq
   def string(key: String): String = apply(key).asString
+  def strings(key: String): Seq[String] = apply(key).asStringSeq
   def obj(key: String): SConfigObject = apply(key).asObject
 
   def withPathValue(path: PathSeq, value: SConfigValue): SConfigObject

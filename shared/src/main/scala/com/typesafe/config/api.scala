@@ -13,8 +13,10 @@ trait Config extends ConfigMergeable {
   def getAnyRefList[T<:Object](path: Path): java.util.List[T]
   def getBoolean(path: Path): Boolean
   def getBooleanList(path: Path): java.util.List[java.lang.Boolean]
-  def getInt(path: Path): Int
-  def getLong(path: Path): Long
+  def getInt(path: Path): java.lang.Integer
+  def getIntList(path: Path): java.util.List[java.lang.Integer]
+  def getLong(path: Path): java.lang.Long
+  def getLongList(path: Path): java.util.List[java.lang.Long]
   def getBytes(path: String): java.lang.Long
   def getBytesList(path: String): java.util.List[java.lang.Long]
   def getConfig(path: Path): Config
@@ -22,6 +24,7 @@ trait Config extends ConfigMergeable {
   def getDouble(path: Path): java.lang.Double
   def getDoubleList(path: Path): java.util.List[java.lang.Double]
   def getString(path: Path): String
+  def getStringList(path: Path): java.util.List[String]
 //  def getDuration(path: )
 }
 
@@ -55,7 +58,6 @@ trait ConfigValue extends ConfigMergeable {
   override def withFallback(other: ConfigMergeable): ConfigValue
   def withOrigin(origin: ConfigOrigin): ConfigValue
 }
-object Rich
 
 trait ConfigObject extends ConfigValue with java.util.Map[String,ConfigValue] {
   def withValue(key: Key, value: ConfigValue): ConfigValue

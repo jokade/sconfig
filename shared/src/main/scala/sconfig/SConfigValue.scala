@@ -7,8 +7,10 @@ import com.typesafe.config
 import com.typesafe.config.ConfigException.WrongType
 import com.typesafe.config._
 import sconfig.SConfigValue.TypeException
+import collection.JavaConverters._
 
 trait SConfigValue extends ConfigValue {
+
   override def atKey(key: String) = ???
   override def atPath(path: String) = ???
   override def origin() = null
@@ -16,18 +18,32 @@ trait SConfigValue extends ConfigValue {
   override def render(options: ConfigRenderOptions) = ???
   override def withFallback(other: ConfigMergeable) = this
   override def withOrigin(origin: ConfigOrigin) = ???
-  def asInt: Int = throw TypeException("NUMBER",valueType().toString)
-  def asLong: Long = throw TypeException("NUMBER",valueType().toString)
-  def asFloat: Float = throw TypeException("NUMBER",valueType().toString)
-  def asDouble: Double = throw TypeException("NUMBER",valueType().toString)
-  def asBoolean: Boolean = throw TypeException("BOOL",valueType().toString)
+  def asInt: java.lang.Integer = throw TypeException("NUMBER",valueType().toString)
+  def asLong: java.lang.Long = throw TypeException("NUMBER",valueType().toString)
+  def asFloat: java.lang.Float = throw TypeException("NUMBER",valueType().toString)
+  def asDouble: java.lang.Double = throw TypeException("NUMBER",valueType().toString)
+  def asBoolean: java.lang.Boolean = throw TypeException("BOOL",valueType().toString)
   def asString: String = render()
+  def asIntSeq: Seq[java.lang.Integer] = throw TypeException("LIST",valueType().toString)
+  def asIntList: java.util.List[java.lang.Integer] = asIntSeq.asJava
+  def asLongSeq: Seq[java.lang.Long] = throw TypeException("LIST",valueType().toString)
+  def asLongList: java.util.List[java.lang.Long] = asLongSeq.asJava
+  def asFloatSeq: Seq[java.lang.Float] = throw TypeException("LIST",valueType().toString)
+  def asFloatList: java.util.List[java.lang.Float] = asFloatSeq.asJava
+  def asDoubleSeq: Seq[java.lang.Double] = throw TypeException("LIST",valueType().toString)
+  def asDoubleList: java.util.List[java.lang.Double] = asDoubleSeq.asJava
+  def asBooleanSeq: Seq[java.lang.Boolean] = throw TypeException("LIST",valueType().toString)
+  def asBooleanList: java.util.List[java.lang.Boolean] = asBooleanSeq.asJava
+  def asStringSeq: Seq[String] = throw TypeException("LIST",valueType().toString)
+  def asStringList: java.util.List[String] = asStringSeq.asJava
   def asObject: SConfigObject = ???
 }
 
 object SConfigValue {
 
   case class TypeException(expected: String, actual: String) extends RuntimeException()
+
+  trait AtomicValue extends SConfigValue
 
   def apply(value: Any): SConfigValue = value match {
     case null => NullValue
@@ -39,18 +55,18 @@ object SConfigValue {
     case s:String => StringValue(s)
     case t => throw new RuntimeException(s"Unsupported type for SConfigValue: $t")
   }
-  object NullValue extends SConfigValue {
+  object NullValue extends AtomicValue {
     override def valueType(): ConfigValueType = ConfigValueType.NULL
     override def unwrapped(): AnyRef = null
   }
 
-  case class StringValue(s: String, quoted: Boolean = true) extends SConfigValue {
+  case class StringValue(s: String, quoted: Boolean = true) extends AtomicValue {
     override def valueType() = ConfigValueType.STRING
     override def unwrapped() = s
     override def asString = s
   }
 
-  trait BooleanValue extends SConfigValue {
+  trait BooleanValue extends AtomicValue {
     override def valueType(): ConfigValueType = ConfigValueType.BOOLEAN
   }
 
@@ -66,7 +82,7 @@ object SConfigValue {
     override def render() = "false"
   }
 
-  trait NumberValue extends SConfigValue {
+  trait NumberValue extends AtomicValue {
     override def valueType(): ConfigValueType = ConfigValueType.NUMBER
   }
 
@@ -84,28 +100,40 @@ object SConfigValue {
     override def render() = l.toString
     override def asInt = l.toInt
     override def asLong = l
-    override def asFloat: Float = l.toFloat
-    override def asDouble: Double = l.toDouble
+    override def asFloat = l.toFloat
+    override def asDouble = l.toDouble
   }
 
   case class FloatValue(f: Float) extends NumberValue {
     override def unwrapped(): AnyRef = java.lang.Float.valueOf(f)
 
     override def render() = f.toString
-    override def asInt: Int = f.toInt
-    override def asLong: Long = f.toLong
-    override def asFloat: Float = f
-    override def asDouble: Double = f.toDouble
+    override def asInt = f.toInt
+    override def asLong = f.toLong
+    override def asFloat = f
+    override def asDouble = f.toDouble
   }
 
   case class DoubleValue(d: Double) extends NumberValue {
     override def unwrapped(): AnyRef = java.lang.Double.valueOf(d)
 
     override def render() = d.toString
-    override def asInt: Int = d.toInt
-    override def asLong: Long = d.toLong
-    override def asFloat: Float = d.toFloat
-    override def asDouble: Double = d
+    override def asInt = d.toInt
+    override def asLong = d.toLong
+    override def asFloat = d.toFloat
+    override def asDouble = d
   }
 
+  case class ListValue(list: Seq[AtomicValue]) extends SConfigValue {
+    override def unwrapped(): java.util.List[AnyRef] = list.map(_.unwrapped).asJava
+
+    override def valueType(): ConfigValueType = ConfigValueType.LIST
+
+    override def asBooleanSeq = list.map(_.asBoolean)
+    override def asIntSeq = list.map(_.asInt)
+    override def asLongSeq = list.map(_.asLong)
+    override def asFloatSeq = list.map(_.asFloat)
+    override def asDoubleSeq = list.map(_.asDouble)
+    override def asStringSeq = list.map(_.asString)
+  }
 }

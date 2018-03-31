@@ -21,14 +21,10 @@ object HoconParser {
 
   def isWhitespaceNoNewline(c: Char): Boolean = c != '\n' && isWhitespace(c)
 
-//  val letter   = P( CharIn('a' to 'z', 'A' to 'Z') )
   val digit: Parser[Unit] = P( CharIn('0' to '9') )
-//  val hexdigit = P( CharIn('0'to'9', 'a' to 'f', 'A' to 'F') )
 
   // whitespace
   val comment: Parser[Unit] = P( ("//" | "#") ~ CharsWhile(_ != '\n') )
-//  val nlspace = P( (CharsWhile(isWhitespace _, min = 1) | comment ).rep )
-//  val space   = P( ( CharsWhile(isWhitespaceNoNewline _, min = 1) | comment ).rep )
   val space: Parser[Unit] = P ( CharsWhile(isWhitespaceNoNewline _ ) )
   val spaceOrNewline: Parser[Unit] = P( CharsWhile(isWhitespace _) )
   val spaceOrCommentOrNewline: Parser[Unit] = P( CharsWhile(isWhitespace _) | comment )
@@ -55,7 +51,15 @@ object HoconParser {
   val number: Parser[NumberValue] = P( "-".? ~ digit.rep(1) ~ ("." ~ digit.rep).? ~ (("e"|"E") ~ ("+"|"-").? ~ digit.rep(1)).? ).!
     .map(NumberValue(_))
 
-  val value: Parser[SConfigValue] = P( bool | number | stringValue | unquotedStringValue | "null".!.map(_ => NullValue) )
+  val atomicValue: Parser[AtomicValue] = P( bool | number | stringValue | unquotedStringValue | "null".!.map(_ => NullValue) )
+//  val emptyList: Parser[ListValue] = P("[" ~ space.rep ~ "]").map(_ => ListValue(Nil))
+  val list: Parser[ListValue] = P("[" ~/
+    space.rep ~ (
+      P("]").map(_ => ListValue(Nil)) |
+      ((atomicValue ~ space.rep ~ "," ~space.rep).rep ~ atomicValue ~ space.rep ~"]").map(p => ListValue(p._1:+p._2))
+    ))
+  val value: Parser[SConfigValue] = P( atomicValue | list )
+
   val pathSeq: Parser[PathSeq]    = P ( space.rep ~ ((quotedPathSegment | unquotedPathSegment) ~ ".").rep ~ (quotedPathSegment | unquotedPathSegment) ~ space.rep ).map( p => PathSeq((p._1 :+ p._2):_*) )
   val pair: Parser[Pair]          = P( space.? ~ pathSeq ~ space.? ~ ( obj | ((":"|"=") ~/ space.? ~ value ) ) )
 

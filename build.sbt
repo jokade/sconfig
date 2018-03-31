@@ -4,12 +4,15 @@ import sbtcrossproject.{crossProject, CrossType}
 val Versions = new {
   val fastparse = "1.0.0"
   val utest     = "0.6.3"
+
+  val scala211  = "2.11.12"
+  val scala212  = "2.12.3"
 }
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
   version := "0.0.1-SNAPSHOT",
-  scalaVersion := "2.11.12",
+  scalaVersion := Versions.scala211,
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint")
   //crossScalaVersions := Seq("2.11.11", "2.12.2")
 )
@@ -37,10 +40,10 @@ lazy val sconfig = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
   .jvmSettings(
-    crossScalaVersions := Seq("2.11.12", "2.12.3")
+    crossScalaVersions := Seq(Versions.scala211, Versions.scala212)
   )
   .jsSettings(
-    crossScalaVersions := Seq("2.11.11", "2.12.2")
+    crossScalaVersions := Seq(Versions.scala211, Versions.scala212)
     //preLinkJSEnv := NodeJSEnv().value,
     //postLinkJSEnv := NodeJSEnv().value
   )
