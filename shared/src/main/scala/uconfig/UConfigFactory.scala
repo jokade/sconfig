@@ -1,23 +1,23 @@
 //     Project: sconfig
 //      Module:
 // Description:
-package sconfig
+package uconfig
 
 import java.io.{InputStream, Reader}
 
-abstract class SConfigFactory {
+abstract class UConfigFactory {
 
   /**
    * Returns an empty configuration.
    */
-  def empty: SConfig = SConfig.empty
+  def empty: UConfig = UConfig.empty
 
   /**
    * Parses the provided HOCON string.
    *
    * @param config
    */
-  def parseString(config: String): SConfig = SConfig(config)
+  def parseString(config: String): UConfig = UConfig(config)
 
   /**
    * Parses the contents of an input stream into a Config instance, using the default parse options.
@@ -26,7 +26,7 @@ abstract class SConfigFactory {
    * @return parsed configuration
    * @throws ConfigException on IO or parse errors
    */
-  def parseInputStream(in: InputStream): SConfig = {
+  def parseInputStream(in: InputStream): UConfig = {
     val configString = io.Source.fromInputStream(in).getLines().mkString("\n")
     parseString(configString)
   }
@@ -34,6 +34,6 @@ abstract class SConfigFactory {
   /**
    * Loads a default configuration.
    */
-  def load(): SConfig = ???
+  def load(): UConfig = ???
 }
 

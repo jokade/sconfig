@@ -1,11 +1,11 @@
 import com.typesafe.config.{ConfigException, Key, Path}
 import fastparse.core.Parsed
-import sconfig.parser.HoconParser
+import uconfig.parser.HoconParser
 //     Project: sconfig
 //      Module: 
 // Description: 
 
-package object sconfig {
+package object uconfig {
 
   type PathSeq = List[Path]
   object PathSeq {

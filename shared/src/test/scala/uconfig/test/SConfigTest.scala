@@ -1,6 +1,6 @@
-package sconfig.test
+package uconfig.test
 
-import sconfig.SConfig
+import uconfig.UConfig
 import utest._
 
 object SConfigTest extends TestSuite {
@@ -26,7 +26,7 @@ object SConfigTest extends TestSuite {
 
   val tests = Tests {
     'config-{
-      val config: SConfig = SConfig(configString)
+      val config: UConfig = UConfig(configString)
       config.getInt("obj.int") ==> 42
       config.getLong("obj.long") ==> -123456789123456789L
       config.getBoolean("obj.bool") ==> true

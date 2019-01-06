@@ -1,10 +1,10 @@
 package com.typesafe.config;
 
-import sconfig.JvmSConfigFactory$;
+import uconfig.JvmUConfigFactory$$;
 
 public final class ConfigFactory {
 
   public static Config load() {
-    return JvmSConfigFactory$.MODULE$.load();
+    return JvmUConfigFactory$$.MODULE$.load();
   }
 }

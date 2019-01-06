@@ -1,7 +1,7 @@
 //     Project: sconfig
 //      Module: shared
 // Description: sconfig implementation of ConfigObject
-package sconfig
+package uconfig
 
 import java.util
 
@@ -10,17 +10,17 @@ import com.typesafe.config._
 import scala.annotation.tailrec
 import scala.collection.MapLike
 
-trait SConfigObject extends SConfigValue with ConfigObject {
+trait UConfigObject extends UConfigValue with ConfigObject {
   override def clear(): Unit = throw new UnsupportedOperationException("ConfigObject is immutable")
   override def put(key: String, value: ConfigValue): ConfigValue = throw new UnsupportedOperationException("ConfigObject is immutable")
   override def putAll(m: util.Map[_ <: String, _ <: ConfigValue]): Unit = throw new UnsupportedOperationException("ConfigObject is immutable")
   override def remove(key: scala.Any): ConfigValue = throw new UnsupportedOperationException("ConfigObject is immutable")
   override def valueType(): ConfigValueType = ConfigValueType.OBJECT
-  override def asObject: SConfigObject = this
+  override def asObject: UConfigObject = this
 
 
-  def apply(key: String): SConfigValue
-  def opt(key: String): Option[SConfigValue]
+  def apply(key: String): UConfigValue
+  def opt(key: String): Option[UConfigValue]
   def int(key: String): Int = apply(key).asInt
   def ints(key: String): Seq[java.lang.Integer] = apply(key).asIntSeq
   def long(key: String): Long = apply(key).asLong
@@ -33,20 +33,20 @@ trait SConfigObject extends SConfigValue with ConfigObject {
   def booleans(key: String): Seq[java.lang.Boolean] = apply(key).asBooleanSeq
   def string(key: String): String = apply(key).asString
   def strings(key: String): Seq[String] = apply(key).asStringSeq
-  def obj(key: String): SConfigObject = apply(key).asObject
+  def obj(key: String): UConfigObject = apply(key).asObject
 
-  def withPathValue(path: PathSeq, value: SConfigValue): SConfigObject
+  def withPathValue(path: PathSeq, value: UConfigValue): UConfigObject
 
-  def find(path: Path): Option[SConfigValue] = find(PathSeq.fromString(path))
-  def find(path: PathSeq): Option[SConfigValue]
+  def find(path: Path): Option[UConfigValue] = find(PathSeq.fromString(path))
+  def find(path: PathSeq): Option[UConfigValue]
 
-  def pairs: Iterable[(String,SConfigValue)]
+  def pairs: Iterable[(String,UConfigValue)]
   def keys: Iterable[String]
 }
 
-object SConfigObject {
+object UConfigObject {
 
-  case class MapConfigObject(map: Map[String,SConfigValue]) extends SConfigObject {
+  case class MapConfigObject(map: Map[String,UConfigValue]) extends UConfigObject {
     import collection.JavaConverters._
     def asJava: java.util.Map[String,ConfigValue] = map.asJava.asInstanceOf[java.util.Map[String,ConfigValue]]
     override def containsKey(key: scala.Any): Boolean = map.contains(key.toString)
@@ -58,47 +58,48 @@ object SConfigObject {
     override def size(): Int = map.size
     override def values(): util.Collection[ConfigValue] = asJava.values()
     override def unwrapped(): util.Map[String, AnyRef] = asJava.asInstanceOf[java.util.Map[String,AnyRef]]
-    override def pairs: Iterable[(String, SConfigValue)] = map
+    override def pairs: Iterable[(String, UConfigValue)] = map
     override def keys: Iterable[String] = map.keys
 
-    override def withValue(key: String, value: ConfigValue): SConfigObject = value match {
-      case svalue: SConfigValue =>
-        val newValue: SConfigValue = map.get(key) match {
+    override def withValue(key: String, value: ConfigValue): UConfigObject = value match {
+      case svalue: UConfigValue =>
+        val newValue: UConfigValue = map.get(key) match {
           case Some(v) => svalue.withFallback(v)
           case _ => svalue
         }
         copy( map = map + (key -> newValue) )
     }
 
-    override def withFallback(other: ConfigMergeable): SConfigValue = other match {
-      case obj: SConfigObject =>
+    override def withFallback(other: ConfigMergeable): UConfigObject = other match {
+      case obj: UConfigObject =>
         val pairsWithFallback = pairs
           .map( kv => (obj.opt(kv._1),kv) )
           .map{
             case (Some(fallback),(key,value)) => (key,value.withFallback(fallback))
             case (_,kv) => kv
           }
-        SConfigObject.MapConfigObject( (obj.pairs ++ pairsWithFallback).toMap )
-      case _ => this
+        UConfigObject.MapConfigObject( (obj.pairs ++ pairsWithFallback).toMap )
+      case UConfig(root) => withFallback(root)
+      case x => this
     }
 
-    override def withPathValue(path: PathSeq, value: SConfigValue): SConfigObject = path match {
+    override def withPathValue(path: PathSeq, value: UConfigValue): UConfigObject = path match {
       case Nil => this
       case x :: Nil => withValue(x,value)
       case x :: xs => withValue(x, map.get(x) match {
-        case Some(obj: SConfigObject) =>
+        case Some(obj: UConfigObject) =>
           obj.withPathValue(xs,value)
         case _ =>
-          SConfigObject.empty.withPathValue(xs,value)
+          UConfigObject.empty.withPathValue(xs,value)
       })
     }
 
-    def apply(key: String): SConfigValue = map(key)
-    def opt(key: String): Option[SConfigValue] = map.get(key)
+    def apply(key: String): UConfigValue = map(key)
+    def opt(key: String): Option[UConfigValue] = map.get(key)
 
-    override def find(path: PathSeq): Option[SConfigValue] = {
+    override def find(path: PathSeq): Option[UConfigValue] = {
       @tailrec
-      def loop(path: PathSeq, obj: SConfigObject): Option[SConfigValue] = path match {
+      def loop(path: PathSeq, obj: UConfigObject): Option[UConfigValue] = path match {
         case Nil => Some(obj)
         case x::Nil => obj.opt(x)
         case x::xs => loop(xs,obj.obj(x))
@@ -107,8 +108,8 @@ object SConfigObject {
     }
   }
 
-  val empty: SConfigObject = new MapConfigObject(Map())
+  val empty: UConfigObject = new MapConfigObject(Map())
 
-  def apply(pairs: Iterable[(PathSeq,SConfigValue)]): SConfigObject =
+  def apply(pairs: Iterable[(PathSeq,UConfigValue)]): UConfigObject =
     pairs.foldLeft(empty)( (obj,p) => obj.withPathValue(p._1,p._2) )
 }

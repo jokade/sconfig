@@ -1,16 +1,16 @@
 //     Project: sconfig
 //      Module: shared
 // Description: sconfig implementation of Config
-package sconfig
+package uconfig
 
 import java.{lang, util}
 import java.util.Map
 
 import com.typesafe.config._
 import fastparse.core.Parsed
-import sconfig.parser.HoconParser
+import uconfig.parser.HoconParser
 
-case class SConfig(root: SConfigObject) extends Config {
+case class UConfig(root: UConfigObject) extends Config {
 //  def root(): SConfigObject = _root
 
   @inline final override def atKey(key: Key): Config = ???
@@ -33,19 +33,22 @@ case class SConfig(root: SConfigObject) extends Config {
   @inline final override def getConfigList(path: Path): util.List[Config] = ???
   @inline final override def getDouble(path: Path): lang.Double = findOrThrow(path).asDouble
   @inline final override def getDoubleList(path: Path): util.List[lang.Double] = findOrThrow(path).asDoubleList
-  override def withFallback(other: ConfigMergeable): ConfigMergeable = ???
+  override def withFallback(other: ConfigMergeable): Config = root match {
+    case map: UConfigObject.MapConfigObject =>
+      UConfig(map.withFallback(other))
+  }
 
-  def findOrThrow(path: Path): SConfigValue = find(path).getOrElse(throw new ConfigException.Missing(path))
+  def findOrThrow(path: Path): UConfigValue = find(path).getOrElse(throw new ConfigException.Missing(path))
 
-  def find(path: Path): Option[SConfigValue] = root.find(path)
+  def find(path: Path): Option[UConfigValue] = root.find(path)
 
 }
 
-object SConfig {
-  def apply(config: String): SConfig = HoconParser.root.parse(config) match {
-    case Parsed.Success(root,_) => SConfig(root)
+object UConfig {
+  def apply(config: String): UConfig = HoconParser.root.parse(config) match {
+    case Parsed.Success(root,_) => UConfig(root)
     case Parsed.Failure(_,_,extra) => throw new ConfigException(ConfigOrigin.StringOrigin(config),extra.toString)
   }
 
-  val empty = SConfig(SConfigObject.empty)
+  val empty = UConfig(UConfigObject.empty)
 }

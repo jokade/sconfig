@@ -1,22 +1,22 @@
 //     Project: sconfig
 //      Module:
 // Description:
-package sconfig.parser.test
+package uconfig.parser.test
 
 import scala.language.implicitConversions
 import fastparse.all.{Parsed, Parser}
 import Parsed.{Failure, Success}
-import sconfig.parser.HoconParser
-import sconfig.{PathSeq, SConfigValue}
+import uconfig.parser.HoconParser
+import uconfig.{PathSeq, UConfigValue}
 import PathSeq._
-import sconfig.SConfigValue.{apply => _, _}
-import sconfig.parser.HoconParser.Pair
+import uconfig.UConfigValue.{apply => _, _}
+import uconfig.parser.HoconParser.Pair
 import utest._
 
 object HoconParserTest extends TestSuite {
 
-  def qw(s: String): SConfigValue = StringValue(s)
-  implicit def pair(p: (PathSeq,String)): (PathSeq,SConfigValue) = (p._1,StringValue(p._2,false))
+  def qw(s: String): UConfigValue = StringValue(s)
+  implicit def pair(p: (PathSeq,String)): (PathSeq,UConfigValue) = (p._1,StringValue(p._2,false))
   implicit def stringValue(s: String): AtomicValue = StringValue(s,false)
   implicit def boolValue(b: Boolean): AtomicValue = if(b) TrueValue else FalseValue
   implicit def longValue(l: Long): AtomicValue = LongValue(l)
@@ -240,7 +240,7 @@ object HoconParserTest extends TestSuite {
   }
 
 
-  def test(input: String, expected: SConfigValue)(implicit parser: Parser[SConfigValue]): Unit = parser.parse(input) match {
+  def test(input: String, expected: UConfigValue)(implicit parser: Parser[UConfigValue]): Unit = parser.parse(input) match {
     case Parsed.Success(res,_) => assert(res == expected)
     case Parsed.Failure(expected, failIndex, extra) => throw new RuntimeException(s"Failed at index $failIndex of input: '$input'; expected: $expected")
   }

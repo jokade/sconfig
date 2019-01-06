@@ -1,18 +1,18 @@
 //     Project: sconfig
 //      Module: shared
 // Description: Fastparse parser for HOCON files.
-package sconfig.parser
+package uconfig.parser
 
 import fastparse.all._
-import sconfig.{PathSeq, SConfigObject, SConfigValue}
+import uconfig.{PathSeq, UConfigObject, UConfigValue}
 
 /**
  * Parser for [[https://github.com/unicredit/shocon/blob/master/shared/src/main/scala/eu/unicredit/shocon/ConfigParser.scala HOCON]] config files.
  */
 object HoconParser {
-  import sconfig.SConfigValue._
+  import uconfig.UConfigValue._
 
-  type Pair = (PathSeq,SConfigValue)
+  type Pair = (PathSeq,UConfigValue)
 
   def isWhitespace(c: Char): Boolean = c match {
     case ' '|'\n'|'\u00A0'|'\u2007'|'\u202F'|'\uFEFF' /* BOM */ => true;
@@ -58,14 +58,14 @@ object HoconParser {
       P("]").map(_ => ListValue(Nil)) |
       ((atomicValue ~ space.rep ~ "," ~space.rep).rep ~ atomicValue ~ space.rep ~"]").map(p => ListValue(p._1:+p._2))
     ))
-  val value: Parser[SConfigValue] = P( atomicValue | list )
+  val value: Parser[UConfigValue] = P( atomicValue | list )
 
   val pathSeq: Parser[PathSeq]    = P ( space.rep ~ ((quotedPathSegment | unquotedPathSegment) ~ ".").rep ~ (quotedPathSegment | unquotedPathSegment) ~ space.rep ).map( p => PathSeq((p._1 :+ p._2):_*) )
   val pair: Parser[Pair]          = P( space.? ~ pathSeq ~ space.? ~ ( obj | ((":"|"=") ~/ space.? ~ value ) ) )
 
-  val obj:   Parser[SConfigObject] = P( "{" ~ pairs ~ "}" ).map(SConfigObject.apply)
+  val obj:   Parser[UConfigObject] = P( "{" ~ pairs ~ "}" ).map(UConfigObject.apply)
   val pairs: Parser[Seq[Pair]]    = P( (spaceOrCommentOrNewline.rep ~ pair ~ spaceOrCommentOrNewline.rep).rep )
 
-  val root: Parser[SConfigObject] = P( spaceOrCommentOrNewline.rep ~ "{".? ~ pairs ~ "}".? ~ spaceOrCommentOrNewline.rep ).map(SConfigObject.apply)
+  val root: Parser[UConfigObject] = P( spaceOrCommentOrNewline.rep ~ "{".? ~ pairs ~ "}".? ~ spaceOrCommentOrNewline.rep ).map(UConfigObject.apply)
 
 }

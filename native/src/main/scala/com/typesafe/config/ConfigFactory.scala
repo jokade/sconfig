@@ -5,9 +5,9 @@ package com.typesafe.config
 
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 
-import sconfig.{SConfig, SConfigFactory}
+import uconfig.{UConfig, UConfigFactory}
 
-object ConfigFactory extends SConfigFactory {
+object ConfigFactory extends UConfigFactory {
 
   /**
    * Parses a file into a Config instance, using the default parse options.
@@ -16,7 +16,7 @@ object ConfigFactory extends SConfigFactory {
    * @return parsed configuration
    * @throws ConfigException on IO or parse errors
    */
-  def parseFile(file: File): SConfig = try{
+  def parseFile(file: File): UConfig = try{
     val bin = new BufferedInputStream(new FileInputStream(file))
     parseInputStream(bin)
   } catch {

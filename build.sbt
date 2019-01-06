@@ -18,24 +18,24 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root = project.in(file(".")).
-  aggregate(sconfigJVM,sconfigJS,sconfigNative).
+  aggregate(uconfigJVM,uconfigJS,uconfigNative).
   settings(commonSettings ++ dontPublish:_*).
   //settings(sonatypeSettings: _*).
   settings(
-    name := "sconfig"
+    name := "uconfig"
   )
 
 
-lazy val sconfig = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val uconfig = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Full)
   .in(file("."))
   .settings(commonSettings ++ publishingSettings:_*)
   .settings(
-    name := "sconfig",
+    name := "uconfig",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "fastparse" % Versions.fastparse,
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.lihaoyi" %%% "utest" % Versions.utest % "test"
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      //"com.lihaoyi" %%% "utest" % Versions.utest % "test"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
@@ -51,9 +51,9 @@ lazy val sconfig = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     nativeLinkStubs := true
   )
 
-lazy val sconfigJVM    = sconfig.jvm
-lazy val sconfigJS     = sconfig.js
-lazy val sconfigNative = sconfig.native
+lazy val uconfigJVM    = uconfig.jvm
+lazy val uconfigJS     = uconfig.js
+lazy val uconfigNative = uconfig.native
 
 lazy val dontPublish = Seq(
   publish := {},
@@ -75,7 +75,7 @@ lazy val publishingSettings = Seq(
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
   pomExtra := (
-    <url>https://github.com/jokade/sconfig</url>
+    <url>https://github.com/jokade/uconfig</url>
     <licenses>
       <license>
         <name>MIT License</name>
@@ -83,8 +83,8 @@ lazy val publishingSettings = Seq(
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:jokade/sconfig</url>
-      <connection>scm:git:git@github.com:jokade/sconfig.git</connection>
+      <url>git@github.com:jokade/uconfig</url>
+      <connection>scm:git:git@github.com:jokade/uconfig.git</connection>
     </scm>
     <developers>
       <developer>

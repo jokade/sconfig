@@ -1,15 +1,15 @@
 //     Project: sconfig
 //      Module: shared
 // Description: sconfig implementation of ConfigValue
-package sconfig
+package uconfig
 
 import com.typesafe.config
 import com.typesafe.config.ConfigException.WrongType
 import com.typesafe.config._
-import sconfig.SConfigValue.TypeException
+import uconfig.UConfigValue.TypeException
 import collection.JavaConverters._
 
-trait SConfigValue extends ConfigValue {
+trait UConfigValue extends ConfigValue {
 
   override def atKey(key: String) = ???
   override def atPath(path: String) = ???
@@ -36,16 +36,16 @@ trait SConfigValue extends ConfigValue {
   def asBooleanList: java.util.List[java.lang.Boolean] = asBooleanSeq.asJava
   def asStringSeq: Seq[String] = throw TypeException("LIST",valueType().toString)
   def asStringList: java.util.List[String] = asStringSeq.asJava
-  def asObject: SConfigObject = ???
+  def asObject: UConfigObject = ???
 }
 
-object SConfigValue {
+object UConfigValue {
 
   case class TypeException(expected: String, actual: String) extends RuntimeException()
 
-  trait AtomicValue extends SConfigValue
+  trait AtomicValue extends UConfigValue
 
-  def apply(value: Any): SConfigValue = value match {
+  def apply(value: Any): UConfigValue = value match {
     case null => NullValue
     case i:Int => LongValue(i)
     case l:Long => LongValue(l)
@@ -124,7 +124,7 @@ object SConfigValue {
     override def asDouble = d
   }
 
-  case class ListValue(list: Seq[AtomicValue]) extends SConfigValue {
+  case class ListValue(list: Seq[AtomicValue]) extends UConfigValue {
     override def unwrapped(): java.util.List[AnyRef] = list.map(_.unwrapped).asJava
 
     override def valueType(): ConfigValueType = ConfigValueType.LIST

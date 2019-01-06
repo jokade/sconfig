@@ -1,9 +1,9 @@
 //     Project: sconfig
 //      Module: shared / test
 // Description: Tests for PathSeq
-package sconfig.test
+package uconfig.test
 
-import sconfig.PathSeq
+import uconfig.PathSeq
 import PathSeq._
 import utest._
 

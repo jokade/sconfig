@@ -25,6 +25,8 @@ trait Config extends ConfigMergeable {
   def getDoubleList(path: Path): java.util.List[java.lang.Double]
   def getString(path: Path): String
   def getStringList(path: Path): java.util.List[String]
+
+  override def withFallback(other: ConfigMergeable): Config
 //  def getDuration(path: )
 }
 

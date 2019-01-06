@@ -3,8 +3,8 @@
 // Description: Scala.js implementation of ConfigFactory
 package com.typesafe.config
 
-import sconfig.SConfigFactory
+import uconfig.UConfigFactory
 
-object ConfigFactory extends SConfigFactory {
+object ConfigFactory extends UConfigFactory {
 
 }

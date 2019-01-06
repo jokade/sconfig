@@ -3,7 +3,7 @@
 // Description: JVM implementation of ConfigFactory
 package com.typesafe.config
 
-import sconfig.SConfigFactory
+import uconfig.UConfigFactory
 
 //object ConfigFactory extends SConfigFactory {
 //
