@@ -1,6 +1,3 @@
-//     Project: sconfig
-//      Module: shared / test
-// Description: Test cases for implementations of SConfigObject
 package uconfig.test
 
 import com.typesafe.config.{ConfigObject, ConfigValue}
@@ -10,7 +7,8 @@ import scala.language.implicitConversions
 import collection.JavaConverters._
 import utest._
 
-trait SConfigObjectTests extends TestSuite {
+
+trait UConfigObjectTests extends TestSuite {
   def createEUT(pairs: Seq[(PathSeq,UConfigValue)]): UConfigObject
 
   val simpleObj = createEUT(Seq(

@@ -1,69 +1,41 @@
-//     Project: sconfig
-//      Module:
-// Description:
 package uconfig.parser.test
 
 import scala.language.implicitConversions
-import fastparse.all.{Parsed, Parser}
-import Parsed.{Failure, Success}
-import uconfig.parser.HoconParser
 import uconfig.{PathSeq, UConfigValue}
-import PathSeq._
-import uconfig.UConfigValue.{apply => _, _}
-import uconfig.parser.HoconParser.Pair
+import uconfig.UConfigValue.{AtomicValue, DoubleValue, FalseValue, ListValue, LongValue, StringValue, TrueValue}
+import uconfig.parser.HoconParser
+import HoconParser.Pair
 import utest._
 
 object HoconParserTest extends TestSuite {
-
-  def qw(s: String): UConfigValue = StringValue(s)
-  implicit def pair(p: (PathSeq,String)): (PathSeq,UConfigValue) = (p._1,StringValue(p._2,false))
-  implicit def stringValue(s: String): AtomicValue = StringValue(s,false)
-  implicit def boolValue(b: Boolean): AtomicValue = if(b) TrueValue else FalseValue
-  implicit def longValue(l: Long): AtomicValue = LongValue(l)
-  implicit def intValue(i: Int): AtomicValue = LongValue(i)
-  implicit def doubleValue(d: Double): AtomicValue = DoubleValue(d)
-  implicit def intListValue(seq: Seq[Int]): ListValue = ListValue(seq.map(LongValue(_)))
-  implicit def stringListValue(seq: Seq[String]): ListValue = ListValue(seq.map(StringValue(_)))
-  implicit def doubleListValue(seq: Seq[Double]): ListValue = ListValue(seq.map(DoubleValue(_)))
-
   val tests = Tests {
+    'unquotedString-{
+      implicit val eut = HoconParser.unquotedString
 
-    'space-{
-      import HoconParser.space.parse
+      testUnquotedString("a.path","a.path")
+      testUnquotedString("  a.path.with.padding\t ","a.path.with.padding")
+      testUnquotedString(" an unquoted \t string with   whitespace\t\tin between \t","an unquoted \t string with   whitespace\t\tin between")
+      testUnquotedString(" simple 'quotes are not considered' as quotes' ","simple 'quotes are not considered' as quotes'")
 
-      val Failure(_,_,_) = parse("")
-      val Failure(_,_,_) = parse("\n")
-      val Failure(_,_,_) = parse("a \t b")
-      val Success(_,5) = parse("  \t  \n ")
-    }
-
-    'unquotedStringValue-{
-      implicit val eut = HoconParser.unquotedStringValue
-
-      test("a.path","a.path")
-      test("  a.path.with.padding\t ","a.path.with.padding")
-      test(" an unquoted \t string with   whitespace\t\tin between \t","an unquoted \t string with   whitespace\t\tin between")
-      test(" simple 'quotes are not considered' as quotes' ","simple 'quotes are not considered' as quotes'")
-
-      test(" an_unquoted-string until $ ignored","an_unquoted-string until")
-      test(" an_unquoted-string until \" ignored","an_unquoted-string until")
-      test(" an_unquoted-string until { ignored","an_unquoted-string until")
-      test(" an_unquoted-string until } ignored","an_unquoted-string until")
-      test(" an_unquoted-string until [ ignored","an_unquoted-string until")
-      test(" an_unquoted-string until ] ignored","an_unquoted-string until")
-      test(" an_unquoted-string until : ignored","an_unquoted-string until")
-      test(" an_unquoted-string until = ignored","an_unquoted-string until")
-      test(" an_unquoted-string until , ignored","an_unquoted-string until")
-      test(" an_unquoted-string until + ignored","an_unquoted-string until")
-      test(" an_unquoted-string until # ignored","an_unquoted-string until")
-      test(" an_unquoted-string until ` ignored","an_unquoted-string until")
-      test(" an_unquoted-string until ^ ignored","an_unquoted-string until")
-      test(" an_unquoted-string until ? ignored","an_unquoted-string until")
-      test(" an_unquoted-string until ! ignored","an_unquoted-string until")
-      test(" an_unquoted-string until @ ignored","an_unquoted-string until")
-      test(" an_unquoted-string until * ignored","an_unquoted-string until")
-      test(" an_unquoted-string until & ignored","an_unquoted-string until")
-      test(" an_unquoted-string until \\ ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until $ ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until \" ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until { ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until } ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until [ ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until ] ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until : ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until = ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until , ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until + ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until # ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until ` ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until ^ ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until ? ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until ! ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until @ ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until * ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until & ignored","an_unquoted-string until")
+      testUnquotedString(" an_unquoted-string until \\ ignored","an_unquoted-string until")
 
       fails("")
     }
@@ -79,7 +51,7 @@ object HoconParserTest extends TestSuite {
     }
 
     'number-{
-      implicit val eut = HoconParser.number
+      implicit val eut = HoconParser.numberValue
 
       test("0",0)
       test("123456789",123456789)
@@ -99,7 +71,7 @@ object HoconParserTest extends TestSuite {
     }
 
     'bool-{
-      implicit val eut = HoconParser.bool
+      implicit val eut = HoconParser.boolValue
 
       test("true",true)
       test("false",false)
@@ -115,7 +87,7 @@ object HoconParserTest extends TestSuite {
     }
 
     'list-{
-      implicit val eut = HoconParser.list
+      implicit val eut = HoconParser.listValue
 
       test("[]",Seq[Int]())
       test("[1,2,3]",Seq(1,2,3))
@@ -135,10 +107,8 @@ object HoconParserTest extends TestSuite {
       test("key=value",(PathSeq("key"),"value"))
       test("\tkey\t=\tvalue",(PathSeq("key"),"value"))
       test("  \t  key  \t=   value  \n  ",(PathSeq("key"),"value"))
-      test("a.simple.path=with a value", (PathSeq("a","simple","path"),"with a value"))
       test("  a.simple.path\t =\twith a value  \t  ", (PathSeq("a","simple","path"),"with a value"))
-//      test(" key")
-//      test(key = value""",("key","value"))
+      test("  a.simple.path\t =\twith a value  \t  ", (PathSeq("a","simple","path"),"with a value"))
     }
 
     'pathSeq-{
@@ -148,15 +118,11 @@ object HoconParserTest extends TestSuite {
       test(" 10.0a.b ",PathSeq("10","0a","b"))
       test("\t \t _.-.%    ",PathSeq("_","-","%"))
       test("a.path with unquoted.whitespace",PathSeq("a","path"))
-      test("   \" a quoted string \"  .x",PathSeq("\" a quoted string \""))
+//      test("   \" a quoted string \"  .x",PathSeq("\" a quoted string \""))
       test("a.path.\"with.a quoted\".segment",PathSeq("a","path","\"with.a quoted\"","segment"))
 
       val complexPath = "\"a complex {} [.+*#$]:path=\".with-multiple.\" quoted \".and-unquoted.\"seg!ments\"   "
       test(complexPath, PathSeq("\"a complex {} [.+*#$]:path=\"","with-multiple","\" quoted \"","and-unquoted","\"seg!ments\""))
-
-      val Parsed.Success(res,_) =  eut.parse(complexPath)
-      assert( res.toPath == complexPath.trim )
-//      test("  a . path \twith . whitespace\t",Seq("a "," path \twith "," whitespace"))
     }
 
     'simplePairs-{
@@ -182,7 +148,7 @@ object HoconParserTest extends TestSuite {
     }
 
     'obj-{
-      val objString =
+            val objString =
         """{
           |  int = 42
           |long:123456789
@@ -218,7 +184,7 @@ object HoconParserTest extends TestSuite {
           |}
         """.stripMargin
 
-      val Parsed.Success(res,_) = HoconParser.obj.parse(objString)
+      val HoconParser.Success(res,_) = HoconParser.parse(HoconParser.obj,objString)
 
       res.int("int")       ==> 42
       res.long("long")     ==> 123456789L
@@ -239,30 +205,48 @@ object HoconParserTest extends TestSuite {
     }
   }
 
+  def qw(s: String): UConfigValue = StringValue(s)
+  implicit def pair(p: (PathSeq,String)): (PathSeq,UConfigValue) = (p._1,StringValue(p._2,false))
+  implicit def stringValue(s: String): AtomicValue = StringValue(s,false)
+  implicit def intValue(i: Int): AtomicValue = LongValue(i)
+  implicit def doubleValue(d: Double): AtomicValue = DoubleValue(d)
+  implicit def boolValue(b: Boolean): AtomicValue = if(b) TrueValue else FalseValue
+  implicit def intListValue(seq: Seq[Int]): ListValue = ListValue(seq.map(LongValue(_)))
+  implicit def stringListValue(seq: Seq[String]): ListValue = ListValue(seq.map(StringValue(_)))
+  implicit def doubleListValue(seq: Seq[Double]): ListValue = ListValue(seq.map(DoubleValue(_)))
 
-  def test(input: String, expected: UConfigValue)(implicit parser: Parser[UConfigValue]): Unit = parser.parse(input) match {
-    case Parsed.Success(res,_) => assert(res == expected)
-    case Parsed.Failure(expected, failIndex, extra) => throw new RuntimeException(s"Failed at index $failIndex of input: '$input'; expected: $expected")
+  def testUnquotedString(input: String, expectedResult: String) = HoconParser.parse(HoconParser.unquotedString,input) match {
+    case HoconParser.Success(result, _) => assert(result == expectedResult)
+    case HoconParser.Failure(msg,_) => throw new RuntimeException(msg)
+    case HoconParser.Error(msg,_) => throw new RuntimeException(msg)
   }
 
-  def test(input: String, expected: Pair)(implicit parser: Parser[Pair]): Unit = parser.parse(input) match {
-    case Parsed.Success(res,_) => assert(res._1==expected._1, res._2==expected._2)
-    case Parsed.Failure(expected, failIndex, extra) => throw new RuntimeException(s"Failed at index $failIndex of input: '$input'; expected: $expected")
+  def test(input: String, expectedResult: UConfigValue)(implicit parser: HoconParser.Parser[UConfigValue]) = HoconParser.parse(parser,input) match {
+    case HoconParser.Success(res,_) => assert( res == expectedResult )
+    case HoconParser.Failure(msg,_) => throw new RuntimeException(msg)
+    case HoconParser.Error(msg,_) => throw new RuntimeException(msg)
   }
 
-  def test(input: String, expected: PathSeq)(implicit parser: Parser[PathSeq]): Unit = parser.parse(input) match {
-    case Parsed.Success(res,_) => assert(res == expected)
-    case Parsed.Failure(expected, failIndex, extra) => throw new RuntimeException(s"Failed at index $failIndex of input: '$input'; expected: $expected")
+  def test(input: String, expectedResult: Pair)(implicit parser: HoconParser.Parser[Pair]) = HoconParser.parse(parser,input) match {
+    case HoconParser.Success(res,_) => assert( res == expectedResult )
+    case HoconParser.Failure(msg,_) => throw new RuntimeException(msg)
+    case HoconParser.Error(msg,_) => throw new RuntimeException(msg)
   }
 
-  def testPairs(input: String, expected: Pair*)(implicit parser: Parser[Seq[Pair]]): Unit = parser.parse(input) match {
-    case Parsed.Success(res,_) => assert(res == expected)
-    case Parsed.Failure(expected, failIndex, extra) => throw new RuntimeException(s"Failed at index $failIndex of input: '$input'; expected: $expected")
+  def test(input: String, expectedResult: PathSeq)(implicit parser: HoconParser.Parser[PathSeq]) = HoconParser.parse(parser,input) match {
+    case HoconParser.Success(res,_) => assert( res == expectedResult )
+    case HoconParser.Failure(msg,_) => throw new RuntimeException(msg)
+    case HoconParser.Error(msg,_) => throw new RuntimeException(msg)
   }
 
-  def fails(input: String)(implicit parser: Parser[_]): Unit =
-    parser.parse(input) match {
-      case Parsed.Failure(expected, failIndex, extra) =>
-      case Parsed.Success(_,_) => throw new RuntimeException(s"expected Failure for input:'$input'")
-    }
+  def testPairs(input: String, expected: Pair*)(implicit parser: HoconParser.Parser[Seq[Pair]]): Unit = HoconParser.parse(parser,input) match {
+    case HoconParser.Success(res,_) => assert( res == expected )
+    case HoconParser.Failure(msg,_) => throw new RuntimeException(msg)
+    case HoconParser.Error(msg,_) => throw new RuntimeException(msg)
+  }
+
+  def fails(input: String)(implicit parser: HoconParser.Parser[_]) = HoconParser.parse(parser,input) match {
+    case HoconParser.Failure(_,_) =>
+    case HoconParser.Error(_,_) | HoconParser.Success(_,_) => throw new RuntimeException(s"expected Failure for input: '$input'")
+  }
 }

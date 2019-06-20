@@ -2,8 +2,8 @@
 import sbtcrossproject.{crossProject, CrossType}
 
 val Versions = new {
-  val fastparse = "1.0.0"
-  val utest     = "0.6.3"
+  val parser    = "1.2.0-SNAPSHOT"  // scala-parser-combinators
+  val utest     = "0.6.8-SNAPSHOT"
 
   val scala211  = "2.11.12"
   val scala212  = "2.12.3"
@@ -11,7 +11,7 @@ val Versions = new {
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.0.1-SNAPSHOT",
+  version := "0.0.2-SNAPSHOT",
   scalaVersion := Versions.scala211,
   scalacOptions ++= Seq("-deprecation","-unchecked","-feature","-Xlint")
   //crossScalaVersions := Seq("2.11.11", "2.12.2")
@@ -33,9 +33,9 @@ lazy val uconfig = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     name := "uconfig",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "fastparse" % Versions.fastparse,
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
-      //"com.lihaoyi" %%% "utest" % Versions.utest % "test"
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-lang.modules" %%% "scala-parser-combinators" % Versions.parser,
+      "com.lihaoyi" %%% "utest" % Versions.utest % "test"
     ),
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
