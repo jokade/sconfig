@@ -33,9 +33,8 @@ case class UConfig(root: UConfigObject) extends Config {
   @inline final override def getConfigList(path: Path): util.List[Config] = ???
   @inline final override def getDouble(path: Path): lang.Double = findOrThrow(path).asDouble
   @inline final override def getDoubleList(path: Path): util.List[lang.Double] = findOrThrow(path).asDoubleList
-  override def withFallback(other: ConfigMergeable): Config = root match {
-    case map: UConfigObject.MapConfigObject =>
-      UConfig(map.withFallback(other))
+  override def withFallback(other: ConfigMergeable): UConfig = root.withFallback(other) match {
+    case obj: UConfigObject => UConfig(obj)
   }
 
   def findOrThrow(path: Path): UConfigValue = find(path).getOrElse(throw new ConfigException.Missing(path))

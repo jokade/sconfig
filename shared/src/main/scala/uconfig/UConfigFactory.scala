@@ -35,5 +35,8 @@ abstract class UConfigFactory {
    * Loads a default configuration.
    */
   def load(): UConfig = ???
+
+  def fromMap(pairs: (String,Any)*): UConfig = fromMap(pairs)
+  def fromMap(pairs: Iterable[(String,Any)]): UConfig = UConfig(UConfigObject.fromMap(pairs))
 }
 

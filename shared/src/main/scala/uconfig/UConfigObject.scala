@@ -108,8 +108,54 @@ object UConfigObject {
     }
   }
 
+  case class CompoundConfig(first: UConfigObject, next: UConfigObject) extends UConfigObject {
+    def apply(key: String): UConfigValue = first.opt(key).getOrElse(next(key))
+
+    override def opt(key: String): Option[UConfigValue] = first.opt(key) match {
+      case value@ Some(_) => value
+      case _ => next.opt(key)
+    }
+
+    override def withFallback(other: ConfigMergeable)  = next.withFallback(other) match {
+      case obj: UConfigObject => CompoundConfig(first,obj)
+    }
+
+    override def withPathValue(path: PathSeq, value: UConfigValue): UConfigObject = ???
+
+    override def find(path: PathSeq): Option[UConfigValue] = first.find(path) match {
+      case value@ Some(_) => value
+      case _ => next.find(path)
+    }
+
+    override def pairs: Iterable[(String, UConfigValue)] = next.pairs.toMap ++ first.pairs
+
+    override def keys: Iterable[String] = first.keys.toSet ++ next.keys
+
+    override def withValue(key: Key, value: ConfigValue): ConfigValue = ???
+
+    override def unwrapped(): AnyRef = ???
+
+    override def size(): Int = keys.size
+
+    override def isEmpty: Boolean = first.isEmpty && next.isEmpty
+
+    override def containsKey(key: scala.Any): Boolean = first.containsKey(key) || next.containsKey(key)
+
+    override def containsValue(value: scala.Any): Boolean = ???
+
+    override def get(key: scala.Any): ConfigValue = apply(key.toString)
+
+    override def keySet(): util.Set[String] = ???
+
+    override def values(): util.Collection[ConfigValue] = ???
+
+    override def entrySet(): util.Set[util.Map.Entry[String, ConfigValue]] = ???
+  }
+
   val empty: UConfigObject = new MapConfigObject(Map())
 
   def apply(pairs: Iterable[(PathSeq,UConfigValue)]): UConfigObject =
     pairs.foldLeft(empty)( (obj,p) => obj.withPathValue(p._1,p._2) )
+
+  def fromMap(pairs: Iterable[(String,Any)]): UConfigObject = apply( pairs.map( p => (PathSeq.fromString(p._1), UConfigValue(p._2)) ) )
 }
