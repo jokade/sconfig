@@ -7,7 +7,6 @@ import java.{lang, util}
 import java.util.Map
 
 import com.typesafe.config._
-import fastparse.core.Parsed
 import uconfig.parser.HoconParser
 
 case class UConfig(root: UConfigObject) extends Config {
@@ -44,9 +43,10 @@ case class UConfig(root: UConfigObject) extends Config {
 }
 
 object UConfig {
-  def apply(config: String): UConfig = HoconParser.root.parse(config) match {
-    case Parsed.Success(root,_) => UConfig(root)
-    case Parsed.Failure(_,_,extra) => throw new ConfigException(ConfigOrigin.StringOrigin(config),extra.toString)
+  def apply(config: String): UConfig = HoconParser.parseAll(HoconParser.root,config) match {
+    case HoconParser.Success(root,_) => UConfig(root)
+    case HoconParser.Failure(msg,_) => throw new ConfigException(ConfigOrigin.StringOrigin(config),msg)
+    case HoconParser.Error(msg,_) => throw new ConfigException(ConfigOrigin.StringOrigin(config),msg)
   }
 
   val empty = UConfig(UConfigObject.empty)

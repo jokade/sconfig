@@ -3,7 +3,7 @@ package uconfig.test
 import uconfig.UConfig
 import utest._
 
-object SConfigTest extends TestSuite {
+object UConfigTest extends TestSuite {
   val configString =
     s"""# this is a comment
        |obj.int = 42
@@ -31,7 +31,6 @@ object SConfigTest extends TestSuite {
       config.getLong("obj.long") ==> -123456789123456789L
       config.getBoolean("obj.bool") ==> true
       config.getDouble("obj.sub.double") ==> 123.456
-      config.
       config.getString("obj.string") ==> "Hello world"
     }
   }

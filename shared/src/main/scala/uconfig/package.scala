@@ -1,9 +1,5 @@
 import com.typesafe.config.{ConfigException, Key, Path}
-import fastparse.core.Parsed
 import uconfig.parser.HoconParser
-//     Project: sconfig
-//      Module: 
-// Description: 
 
 package object uconfig {
 
@@ -11,9 +7,10 @@ package object uconfig {
   object PathSeq {
     def apply(segments: Key*): PathSeq = List(segments:_*)
 
-    def fromString(path: String): PathSeq = HoconParser.pathSeq.parse(path) match {
-      case Parsed.Success(seq,_) => seq
-      case Parsed.Failure(_,_,extra) => throw new ConfigException.BadPath(path,extra.toString)
+    def fromString(path: String): PathSeq = HoconParser.parse(HoconParser.pathSeq,path) match {
+      case HoconParser.Success(seq,_) => seq
+      case HoconParser.Failure(msg,_) => throw new ConfigException.BadPath(path,msg)
+      case HoconParser.Error(msg,_) => throw new ConfigException.BadPath(path,msg)
     }
 
     implicit class RichPathSeq(val ps: PathSeq) extends AnyVal {

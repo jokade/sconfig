@@ -1,71 +1,42 @@
-//     Project: sconfig
-//      Module: shared
-// Description: Fastparse parser for HOCON files.
 package uconfig.parser
 
-import fastparse.all._
 import uconfig.{PathSeq, UConfigObject, UConfigValue}
+import uconfig.UConfigValue.{AtomicValue, BooleanValue, FalseValue, ListValue, NumberValue, StringValue, TrueValue}
 
-/**
- * Parser for [[https://github.com/unicredit/shocon/blob/master/shared/src/main/scala/eu/unicredit/shocon/ConfigParser.scala HOCON]] config files.
- */
-object HoconParser {
-  import uconfig.UConfigValue._
+import scala.util.parsing.combinator.JavaTokenParsers
+
+object HoconParser extends JavaTokenParsers {
 
   type Pair = (PathSeq,UConfigValue)
 
-  def isWhitespace(c: Char): Boolean = c match {
-    case ' '|'\n'|'\u00A0'|'\u2007'|'\u202F'|'\uFEFF' /* BOM */ => true;
-    case _ => Character.isWhitespace(c);
-  }
+  val unquotedString: Parser[String] = """[^$"{}\[\]:=,+#`\^?!@*&\\]+""".r ^^ (_.trim)
+  val unquotedStringValue: Parser[StringValue] = unquotedString ^^ (StringValue(_,quoted = false))
 
-  def isWhitespaceNoNewline(c: Char): Boolean = c != '\n' && isWhitespace(c)
+  val unquotedPathSegment: Parser[String] = """[^\s\.$"{}\[\]:=,+#`\^?!@*&\\]+""".r ^^ (_.trim)
+  val quotedPathSegment: Parser[String] = stringLiteral
 
-  val digit: Parser[Unit] = P( CharIn('0' to '9') )
+  // TODO: don't use stripPrefix/Suffix
+  val stringValue: Parser[StringValue] = stringLiteral ^^ ( s => StringValue(s.stripPrefix("\"").stripSuffix("\"")))
 
-  // whitespace
-  val comment: Parser[Unit] = P( ("//" | "#") ~ CharsWhile(_ != '\n') )
-  val space: Parser[Unit] = P ( CharsWhile(isWhitespaceNoNewline _ ) )
-  val spaceOrNewline: Parser[Unit] = P( CharsWhile(isWhitespace _) )
-  val spaceOrCommentOrNewline: Parser[Unit] = P( CharsWhile(isWhitespace _) | comment )
+  val numberValue: Parser[NumberValue] = floatingPointNumber ^^ (NumberValue(_)) | wholeNumber ^^ (NumberValue(_))
 
-  private def isUnquotedStringChar(c: Char) = c match {
-    case '$' | '"' | '{' | '}' | '[' | ']' | ':' | '=' | ',' | '+' | '#' | '`' | '^' | '?' | '!' | '@' | '*' | '&' | '\\' => false
-    case _ => true
-  }
-  val unquotedString: Parser[String] = P( CharsWhile(isUnquotedStringChar _).!.map(_.trim) )
-  val unquotedStringValue: Parser[StringValue] = unquotedString.map(StringValue(_,quoted=false))
+  val boolValue: Parser[BooleanValue] = "true" ^^ (_ => TrueValue) | "false" ^^(_ => FalseValue)
 
-  private def isUnquotedPathSegmentChar(c: Char) = c != '.' && !isWhitespace(c) && isUnquotedStringChar(c)
-  val unquotedPathSegment: Parser[String] = P( CharsWhile(isUnquotedPathSegmentChar _) ).!
-  val quotedPathSegment: Parser[String] = P( string ).map("\""+_+"\"")
+  val atomicValue: Parser[AtomicValue] = boolValue | numberValue | stringValue | unquotedStringValue
 
-  val string: Parser[String]  = P("\"" ~ ("\\\"" | (!"\"" ~ AnyChar)).rep.! ~ "\"")
-  val stringValue: Parser[StringValue] = string.map(StringValue(_))
+  val listValue: Parser[ListValue] = "[" ~> repsep(atomicValue,",") <~ "]" ^^ (ListValue(_))
 
-  val bool:   Parser[BooleanValue] = P( "true" | "false" ).!.map{
-    case "true" => TrueValue
-    case _ => FalseValue
-  }
+  val value: Parser[UConfigValue] = atomicValue | listValue
 
-  val number: Parser[NumberValue] = P( "-".? ~ digit.rep(1) ~ ("." ~ digit.rep).? ~ (("e"|"E") ~ ("+"|"-").? ~ digit.rep(1)).? ).!
-    .map(NumberValue(_))
+  val pathSeq: Parser[PathSeq] = rep1sep(unquotedPathSegment | quotedPathSegment, ".")
+  val pair: Parser[Pair] = ( pathSeq ~ obj ^^ (p => (p._1,p._2) ) | ( pathSeq ~ (":" | "=") ~ value) ^^( p => (p._1._1,p._2) ) )
 
-  val atomicValue: Parser[AtomicValue] = P( bool | number | stringValue | unquotedStringValue | "null".!.map(_ => NullValue) )
-//  val emptyList: Parser[ListValue] = P("[" ~ space.rep ~ "]").map(_ => ListValue(Nil))
-  val list: Parser[ListValue] = P("[" ~/
-    space.rep ~ (
-      P("]").map(_ => ListValue(Nil)) |
-      ((atomicValue ~ space.rep ~ "," ~space.rep).rep ~ atomicValue ~ space.rep ~"]").map(p => ListValue(p._1:+p._2))
-    ))
-  val value: Parser[UConfigValue] = P( atomicValue | list )
+  val comment: Parser[Unit] = ("//" | "#") ~ """[^\n]*""".r  ^^( _ => ())
+  val spaceOrCommentOrNewline: Parser[Unit] = (whiteSpace | comment | "\n" ) ^^ (_ => ())
 
-  val pathSeq: Parser[PathSeq]    = P ( space.rep ~ ((quotedPathSegment | unquotedPathSegment) ~ ".").rep ~ (quotedPathSegment | unquotedPathSegment) ~ space.rep ).map( p => PathSeq((p._1 :+ p._2):_*) )
-  val pair: Parser[Pair]          = P( space.? ~ pathSeq ~ space.? ~ ( obj | ((":"|"=") ~/ space.? ~ value ) ) )
+  val pairs: Parser[Seq[Pair]] = opt(spaceOrCommentOrNewline) ~> rep( opt(spaceOrCommentOrNewline) ~> pair <~ opt(spaceOrCommentOrNewline))
 
-  val obj:   Parser[UConfigObject] = P( "{" ~ pairs ~ "}" ).map(UConfigObject.apply)
-  val pairs: Parser[Seq[Pair]]    = P( (spaceOrCommentOrNewline.rep ~ pair ~ spaceOrCommentOrNewline.rep).rep )
+  val obj: Parser[UConfigObject] = "{" ~> pairs <~ "}" ^^(UConfigObject(_))
 
-  val root: Parser[UConfigObject] = P( spaceOrCommentOrNewline.rep ~ "{".? ~ pairs ~ "}".? ~ spaceOrCommentOrNewline.rep ).map(UConfigObject.apply)
-
+  def root: Parser[UConfigObject] = rep(spaceOrCommentOrNewline) ~> pairs <~ rep(spaceOrCommentOrNewline) ^^ UConfigObject.apply
 }
